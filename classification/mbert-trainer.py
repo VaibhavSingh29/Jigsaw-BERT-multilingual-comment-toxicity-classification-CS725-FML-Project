@@ -101,7 +101,7 @@ class Classifier(nn.Module):
         )
 
         for epoch in range(hparams['epochs']):
-            for i, (input_ids, attention_mask, labels) in enumerate(train_loader):
+            for i, (input_ids, attention_mask, labels) in enumerate(tqdm(train_loader, desc="minibatches trained on")):
                 input_ids = input_ids.to(DEVICE)
                 attention_mask = attention_mask.to(DEVICE)
                 labels = labels.type(torch.LongTensor).to(DEVICE)
@@ -143,8 +143,8 @@ class Classifier(nn.Module):
         with torch.no_grad():
             input_ids = input_ids.to(DEVICE)
             attention_mask = attention_mask.to(DEVICE)
-            outputs = self.forward(input_ids, attention_mask)
-            pred = torch.argmax(outputs, dim=1)
+            output = self.model(input_ids, attention_mask)
+            pred = torch.argmax(output.logits, dim=1)
             return pred
 
 
