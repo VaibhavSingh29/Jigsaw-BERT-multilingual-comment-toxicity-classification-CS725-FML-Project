@@ -145,8 +145,8 @@ class Classifier(nn.Module):
         with torch.no_grad():
             input_ids = input_ids.to(DEVICE)
             attention_mask = attention_mask.to(DEVICE)
-            outputs = self.forward(input_ids, attention_mask)
-            pred = torch.argmax(outputs, dim=1)
+            output = self.forward(input_ids, attention_mask)
+            pred = torch.argmax(output.logits, dim=1)
             return pred
 
 
