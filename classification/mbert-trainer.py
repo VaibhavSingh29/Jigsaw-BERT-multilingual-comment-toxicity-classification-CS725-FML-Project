@@ -158,17 +158,17 @@ def main():
 
     # hyperparameters
     hparams = {}
-    hparams['epochs'] = 4
-    hparams['batch_size'] = 1
-    hparams['lr'] = 2e-5
+    hparams['epochs'] = 3
+    hparams['batch_size'] = 32
+    hparams['lr'] = 3e-5
     hparams['beta_1'] = 0.9
     hparams['beta_2'] = 0.999
     hparams['token_length'] = 200
 
-    checkpoint = 'bert-base-uncased'
+    checkpoint = 'bert-base-multilingual-cased'
 
-    train_df = pd.read_csv('../data/jigsaw-toxic-comment-train.csv', nrows=16)
-    dev_df = pd.read_csv('../data/validation.csv', nrows=8)
+    train_df = pd.read_csv('../data/jigsaw-toxic-comment-train.csv')
+    dev_df = pd.read_csv('../data/validation.csv')
 
     preprocessor = Preprocessor(checkpoint, hparams['token_length'])
     train_X, train_Y = preprocessor(train_df)
