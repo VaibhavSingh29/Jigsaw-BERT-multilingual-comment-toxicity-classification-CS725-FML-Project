@@ -101,7 +101,7 @@ class Classifier(nn.Module):
         )
 
         for epoch in range(hparams['epochs']):
-            for i, (input_ids, attention_mask, labels) in enumerate(train_loader):
+            for i, (input_ids, attention_mask, labels) in enumerate(tqdm(train_loader, desc="minibatches trained on")):
                 input_ids = input_ids.to(DEVICE)
                 attention_mask = attention_mask.to(DEVICE)
                 labels = labels.type(torch.LongTensor).to(DEVICE)
@@ -143,8 +143,8 @@ class Classifier(nn.Module):
         with torch.no_grad():
             input_ids = input_ids.to(DEVICE)
             attention_mask = attention_mask.to(DEVICE)
-            outputs = self.forward(input_ids, attention_mask)
-            pred = torch.argmax(outputs, dim=1)
+            output = self.model(input_ids, attention_mask)
+            pred = torch.argmax(output.logits, dim=1)
             return pred
 
 
@@ -158,17 +158,17 @@ def main():
 
     # hyperparameters
     hparams = {}
-    hparams['epochs'] = 4
-    hparams['batch_size'] = 1
-    hparams['lr'] = 2e-5
+    hparams['epochs'] = 3
+    hparams['batch_size'] = 32
+    hparams['lr'] = 3e-5
     hparams['beta_1'] = 0.9
     hparams['beta_2'] = 0.999
     hparams['token_length'] = 200
 
-    checkpoint = 'bert-base-uncased'
+    checkpoint = 'bert-base-multilingual-cased'
 
-    train_df = pd.read_csv('../data/jigsaw-toxic-comment-train.csv', nrows=16)
-    dev_df = pd.read_csv('../data/validation.csv', nrows=8)
+    train_df = pd.read_csv('../data/jigsaw-toxic-comment-train.csv')
+    dev_df = pd.read_csv('../data/validation.csv')
 
     preprocessor = Preprocessor(checkpoint, hparams['token_length'])
     train_X, train_Y = preprocessor(train_df)
