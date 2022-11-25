@@ -9,6 +9,7 @@ from transformers import BertTokenizer, BertForSequenceClassification
 from transformers import get_linear_schedule_with_warmup
 from tqdm import tqdm
 from transformers import logging
+from sklearn.utils import class_weight
 logging.set_verbosity_error()
 
 if torch.cuda.is_available():
@@ -54,6 +55,18 @@ class Preprocessor():
 
         return encoded_data_X, data_Y
 
+    def process_one(self, sentence):
+        output = self.tokenizer.encode_plus(
+            sentence,
+            add_special_tokens=True,
+            max_length=self.token_length,
+            truncation=True,
+            padding='max_length',
+            return_attention_mask=True,
+            return_token_type_ids=False,
+            return_tensors='pt'
+        )
+
 
 # class dataloader
 class CustomDataLoader():
@@ -87,7 +100,7 @@ class Classifier(nn.Module):
         return output
 
     def train(self, train_loader, hparams):
-        criterion = nn.CrossEntropyLoss()
+        criterion = nn.CrossEntropyLoss(weight=hparams['weights'].to(DEVICE))
         optimizer = torch.optim.Adam(
             self.parameters(),
             lr=hparams['lr'],
@@ -147,6 +160,14 @@ class Classifier(nn.Module):
             pred = torch.argmax(output.logits, dim=1)
             return pred
 
+    def predict_prob(self, input_ids, attention_mask):
+        with torch.no_grad():
+            input_ids = input_ids.to(DEVICE)
+            attention_mask = attention_mask.to(DEVICE)
+            output = self.model(input_ids, attention_mask)
+            prob = torch.softmax(output.logits, dim=1)
+            return prob
+
 
 def save_model(model, checkpoint, accuracy):
     PATH = '../saved_models/'
@@ -158,17 +179,32 @@ def main():
 
     # hyperparameters
     hparams = {}
-    hparams['epochs'] = 3
-    hparams['batch_size'] = 32
+    hparams['epochs'] = 2
+    hparams['batch_size'] = 64
     hparams['lr'] = 3e-5
     hparams['beta_1'] = 0.9
     hparams['beta_2'] = 0.999
     hparams['token_length'] = 200
 
-    checkpoint = 'bert-base-multilingual-cased'
+    checkpoint = 'bert-base-uncased'  # 'bert-base-multilingual-cased'
 
-    train_df = pd.read_csv('../data/jigsaw-toxic-comment-train.csv')
-    dev_df = pd.read_csv('../data/validation.csv')
+    train_df = pd.read_csv(
+        '../data/jigsaw-toxic-comment-train.csv', usecols=['comment_text', 'toxic'], nrows=16)
+    train_unintend_bias = pd.read_csv(
+        '../data/jigsaw-unintended-bias-train.csv', usecols=['comment_text', 'toxic'], nrows=16)
+    train_unintend_bias.toxic = train_unintend_bias.toxic.round().astype(int)
+    n = train_unintend_bias.toxic.sum()
+    train_df = pd.concat([train_df, train_unintend_bias.query(
+        'toxic == 1'), train_unintend_bias.query('toxic == 0').sample(n=n)])
+    dev_df = pd.read_csv('../data/validation.csv',
+                         usecols=['comment_text', 'toxic'], nrows=16)
+    labels = train_df.toxic.to_numpy()
+    weights = class_weight.compute_class_weight(
+        class_weight='balanced',
+        classes=np.unique(labels),
+        y=labels)
+
+    hparams['weights'] = torch.Tensor(weights)
 
     preprocessor = Preprocessor(checkpoint, hparams['token_length'])
     train_X, train_Y = preprocessor(train_df)
