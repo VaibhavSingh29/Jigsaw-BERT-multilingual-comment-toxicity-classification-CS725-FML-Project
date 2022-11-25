@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify, render_template
 from torch_utils import get_encoding, get_prediction
+import json
 
 app = Flask(__name__)
 
@@ -12,8 +13,10 @@ def home():
 @app.route('/predict', methods=['POST'])
 def predict():
     # get sentence, tokenize, predict, return prob
+    with open('data.json', 'w', encoding='utf-8') as f:
+        json.dump(request.form, f, indent=4)
     if request.method == 'POST':
-        if request.form['sentence'] != "":
+        if request.form['sentence'] == "":
             return jsonify({
                 'error': 'no input'
             })
