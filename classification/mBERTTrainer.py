@@ -55,6 +55,18 @@ class Preprocessor():
 
         return encoded_data_X, data_Y
 
+    def process_one(self, sentence):
+        output = self.tokenizer.encode_plus(
+            sentence,
+            add_special_tokens=True,
+            max_length=self.token_length,
+            truncation=True,
+            padding='max_length',
+            return_attention_mask=True,
+            return_token_type_ids=False,
+            return_tensors='pt'
+        )
+
 
 # class dataloader
 class CustomDataLoader():
