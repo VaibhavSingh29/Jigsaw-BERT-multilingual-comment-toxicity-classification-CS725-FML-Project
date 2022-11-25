@@ -66,6 +66,7 @@ class Preprocessor():
             return_token_type_ids=False,
             return_tensors='pt'
         )
+        return output
 
 
 # class dataloader
