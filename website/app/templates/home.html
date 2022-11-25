@@ -18,17 +18,12 @@
 </head>
 
 <body>
-    <div class="container external internal" id="content">
-        <div class="row">
-            <div class="col">1 of 2</div>
-            <div class="col">2 of 2</div>
-        </div>
-    </div>
-    <form>
-        <div class="form-group">
-            <label for="exampleFormControlTextarea1">Example textarea</label>
-            <textarea class="form-control" id="exampleFormControlTextarea1" rows="3"></textarea>
+    <form action="/predict" method="POST">
+        <div class="form">
+            <label for="sentence">Example textarea</label>
+            <textarea class="form-control" id="sentence" name="sentence" rows="1"></textarea>
           </div>
+          <button type="submit" class="btn btn-primary mb-2">Find Out</button>
     </form>
 </body>
 

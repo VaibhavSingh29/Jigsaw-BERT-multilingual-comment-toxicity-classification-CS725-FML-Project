@@ -13,12 +13,12 @@ def home():
 def predict():
     # get sentence, tokenize, predict, return prob
     if request.method == 'POST':
-        if request.params.sentence != "":
+        if request.form['sentence'] != "":
             return jsonify({
                 'error': 'no input'
             })
         try:
-            input_ids, attention_mask = get_encoding(request.params.sentence)
+            input_ids, attention_mask = get_encoding(request.form['sentence'])
             prob = get_prediction(input_ids, attention_mask)
             return jsonify({
                 'result': prob.tolist()
@@ -30,4 +30,4 @@ def predict():
 
 
 if(__name__ == '__main__'):
-    app.run()
+    app.run(debug=True)
