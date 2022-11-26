@@ -1,5 +1,6 @@
 data/
 website/venv
 **/__pycache__/
+**/flask_session/
 saved_models
 
